@@ -1,0 +1,17 @@
+# Keep the worker image build context small and free of secrets.
+.git
+.next
+node_modules
+dist
+coverage
+.vercel
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.cer
+docs
+tests
+README.md

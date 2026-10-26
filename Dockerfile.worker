@@ -1,0 +1,34 @@
+# syntax=docker/dockerfile:1
+#
+# Pulseboard worker image for Vercel Daemons.
+#
+# The build context is the repository root (this file lives there on purpose): Vercel uses
+# the directory that contains the Dockerfile as the build context, and the worker imports
+# shared code from src/shared and src/lib/server.
+#
+# No credentials are used at build time. Vercel passes project environment variables to the
+# build as build arguments, but this file declares no ARG, so none reach an image layer.
+# At run time the instance receives the six variables from the deployment environment.
+
+FROM node:24-slim AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+COPY tsconfig.json ./
+COPY scripts ./scripts
+COPY src/shared ./src/shared
+COPY src/lib/server ./src/lib/server
+COPY workers ./workers
+RUN npm run build:worker
+
+FROM node:24-slim AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+# The bundle contains the worker, KafkaJS, the MongoDB driver, and Zod: no node_modules needed.
+COPY --from=build /app/dist/worker.cjs /app/dist/worker.cjs.map ./dist/
+USER node
+# KafkaJS 2.2.4 passes a negative delay to setTimeout on current Node versions, which Node reports
+# once as TimeoutNegativeWarning (it clamps the delay to 1 ms; behaviour is unaffected).
+CMD ["node", "--disable-warning=TimeoutNegativeWarning", "--enable-source-maps", "dist/worker.cjs"]
