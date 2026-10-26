@@ -61,7 +61,7 @@ describe("configuration validation", () => {
     expect(getMongoConfig(escaped).dbName).toBe("pulseboard");
     const kafka = getKafkaConfig(escaped);
     expect(kafka.brokers).toEqual(["kafka-a.example.com:12345", "kafka-b.example.com:12345"]);
-    expect(kafka.ca).toBe(CERT);
+    expect(kafka).toMatchObject({ tls: true, ca: CERT });
     expect(getAdminToken(goodEnv)).toHaveLength(32);
     expect(() => validateWorkerConfig(goodEnv)).not.toThrow();
   });
@@ -95,5 +95,20 @@ describe("configuration validation", () => {
       expect(() => getKafkaConfig({ ...goodEnv, [name]: undefined })).toThrow(ConfigError);
     }
     expect(() => getKafkaConfig({ ...goodEnv, KAFKA_CLIENT_KEY: CERT })).toThrow(ConfigError);
+  });
+
+  it("keeps TLS on by default and for any KAFKA_SSL value other than exactly \"false\"", () => {
+    for (const KAFKA_SSL of [undefined, "", "true", "0", "no", "off"]) {
+      expect(getKafkaConfig({ ...goodEnv, KAFKA_SSL }).tls).toBe(true);
+      expect(() => getKafkaConfig({ ...goodEnv, KAFKA_SSL, KAFKA_CA_CERT: undefined })).toThrow(ConfigError);
+    }
+  });
+
+  it("allows plaintext Kafka only for brokers on this machine", () => {
+    const local = getKafkaConfig({ KAFKA_BROKERS: "localhost:9094, 127.0.0.1:9095", KAFKA_SSL: "false" });
+    expect(local).toEqual({ tls: false, brokers: ["localhost:9094", "127.0.0.1:9095"] });
+    expect(() => getKafkaConfig({ ...goodEnv, KAFKA_SSL: "false" })).toThrow(/localhost or 127\.0\.0\.1/);
+    expect(() => getKafkaConfig({ KAFKA_BROKERS: "localhost:9094,kafka.example.com:12345", KAFKA_SSL: "false" })).toThrow(ConfigError);
+    expect(() => getKafkaConfig({ KAFKA_BROKERS: "notlocalhost:9094", KAFKA_SSL: "false" })).toThrow(ConfigError);
   });
 });

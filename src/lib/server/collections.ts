@@ -49,6 +49,8 @@ export interface MetricBucketDoc {
   page_view?: number;
   product_click?: number;
   add_to_cart?: number;
+  remove_from_cart?: number;
+  order_created?: number;
   expireAt: Date;
 }
 

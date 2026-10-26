@@ -57,7 +57,7 @@ export function EventBreakdown({ data }: { data: OverviewData | null }) {
         <CardTitle>Event types</CardTitle>
         <CardDescription>{data ? RANGES[data.range].label : "Selected range"}</CardDescription>
       </CardHeader>
-      <CardContent>{data === null ? <CardSkeleton rows={3} /> : <Breakdown data={data} />}</CardContent>
+      <CardContent>{data === null ? <CardSkeleton rows={EVENT_TYPES.length} /> : <Breakdown data={data} />}</CardContent>
     </Card>
   );
 }

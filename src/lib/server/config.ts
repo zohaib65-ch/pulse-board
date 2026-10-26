@@ -72,12 +72,16 @@ export interface MongoConfig {
   dbName: string;
 }
 
-export interface KafkaConfig {
-  brokers: string[];
-  ca: string;
-  cert: string;
-  key: string;
-}
+/**
+ * Aiven mutual TLS (`tls: true`, the only mode for real deployments) or, for local development
+ * only, a plaintext connection to a broker on this machine (`tls: false`).
+ */
+export type KafkaConfig =
+  | { tls: true; brokers: string[]; ca: string; cert: string; key: string }
+  | { tls: false; brokers: string[] };
+
+/** Plaintext Kafka is accepted only for brokers on this machine. */
+const LOOPBACK_BROKER = /^(localhost|127\.0\.0\.1):\d{1,5}$/;
 
 type Env = Record<string, string | undefined>;
 
@@ -98,6 +102,15 @@ export function getMongoConfig(env: Env = process.env): MongoConfig {
 }
 
 export function getKafkaConfig(env: Env = process.env): KafkaConfig {
+  // Opt-in, exact match: any other value (or none) keeps TLS on. Not listed in .env.example on purpose.
+  if (env.KAFKA_SSL?.trim().toLowerCase() === "false") {
+    const { KAFKA_BROKERS } = parseEnv(z.object({ KAFKA_BROKERS: brokersSchema }), env, ["KAFKA_BROKERS"]);
+    if (!KAFKA_BROKERS.every((broker) => LOOPBACK_BROKER.test(broker))) {
+      throw new ConfigError(["KAFKA_SSL"], ["KAFKA_SSL=false is only allowed when every broker is localhost or 127.0.0.1"]);
+    }
+    return { tls: false, brokers: KAFKA_BROKERS };
+  }
+
   const parsed = parseEnv(kafkaEnvSchema, env, [
     "KAFKA_BROKERS",
     "KAFKA_CA_CERT",
@@ -105,6 +118,7 @@ export function getKafkaConfig(env: Env = process.env): KafkaConfig {
     "KAFKA_CLIENT_KEY",
   ]);
   return {
+    tls: true,
     brokers: parsed.KAFKA_BROKERS,
     ca: parsed.KAFKA_CA_CERT,
     cert: parsed.KAFKA_CLIENT_CERT,

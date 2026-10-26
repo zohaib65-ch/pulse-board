@@ -17,7 +17,7 @@ import { useNow } from "@/lib/client/use-now";
 import { formatOffset, formatWhen, shortId } from "@/lib/format";
 import type { IngestData } from "@/shared/api";
 import { PAGES, PRODUCTS } from "@/shared/catalog";
-import { EVENT_TYPES, EVENT_TYPE_LABELS, TOPIC_NAME, type EventType } from "@/shared/constants";
+import { EVENT_TYPES, EVENT_TYPE_LABELS, PRODUCT_EVENT_TYPES, TOPIC_NAME, type EventType } from "@/shared/constants";
 import type { WebsiteEvent } from "@/shared/event-schema";
 import { AdminRequired } from "../admin-button";
 import { EVENT_STYLE } from "../event-style";
@@ -53,7 +53,7 @@ export function SendEventsCard() {
     setError(null);
     try {
       // Everything that can throw, ids included, is inside the try so "Sending…" can never stick.
-      const needsProduct = type !== "page_view";
+      const needsProduct = (PRODUCT_EVENT_TYPES as readonly EventType[]).includes(type);
       const event: WebsiteEvent = {
         eventId: newId(),
         type,

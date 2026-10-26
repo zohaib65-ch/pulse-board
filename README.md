@@ -101,7 +101,26 @@ At the maximum generator rate (10 events/s) the two consumer groups perform roug
 
 ### Running Kafka and MongoDB locally instead
 
-Pulseboard requires mutual TLS, so a local broker needs an SSL listener with `ssl.client.auth=required` and certificates whose subject alternative names include the broker hostname. Any broker/replica-set pair works; the project itself ships no local Kafka setup.
+Real deployments always use mutual TLS, so a non-local broker needs an SSL listener with `ssl.client.auth=required` and certificates whose subject alternative names include the broker hostname.
+
+For development on one machine there is a throwaway stack that never touches Aiven or Atlas: [`docker-compose.local.yml`](docker-compose.local.yml) starts a single-node Kafka (KRaft, `localhost:9094`, topic `website-events` with 2 partitions) and a single-node MongoDB replica set (`localhost:27018`; the consumers need transactions).
+
+```bash
+docker compose -f docker-compose.local.yml up -d --wait
+docker compose -f docker-compose.local.yml down -v     # stop and delete all local data
+```
+
+Point Pulseboard at it with process environment variables (they take precedence over `.env`, which you do not need to edit):
+
+```bash
+export MONGODB_URI='mongodb://localhost:27018/pulseboard_local?directConnection=true'
+export KAFKA_BROKERS='localhost:9094'
+export KAFKA_SSL='false'                 # plaintext, accepted ONLY when every broker is localhost / 127.0.0.1
+export ADMIN_TOKEN="$(openssl rand -base64 32)"
+npm run dev -- -p 3001 & npm run dev:worker
+```
+
+`KAFKA_SSL=false` is deliberately not in `.env.example`: only the exact value `false` disables TLS, and any broker that is not on this machine is refused at startup, so it cannot weaken a real deployment by accident.
 
 ## Running locally
 
@@ -234,9 +253,15 @@ All responses are `{ "ok": true, "data": … }` or `{ "ok": false, "error": { co
 | `POST /api/replays` | admin | `202` with the job; `409` if one is already active. |
 | `GET /api/replays`, `GET /api/replays/{id}` | – | Job status, per-partition progress, isolated result statistics. |
 
-Event contract (`src/shared/event-schema.ts`): `eventId` (UUID, preserved on retries), `type` (`page_view`/`product_click`/`add_to_cart`), `timestamp` (ISO, not older than 24 h or more than 5 min in the future), `sessionId` (pseudonymous UUID, also the Kafka key), `page` (pathname only, no query string or fragment, ≤ 200 chars), `productId` (required for clicks and cart adds), `source` (`playground`/`simulator`).
+Event contract (`src/shared/event-schema.ts`): `eventId` (UUID, preserved on retries), `type` (`page_view`/`product_click`/`add_to_cart`/`remove_from_cart`/`order_created`), `timestamp` (ISO, not older than 24 h or more than 5 min in the future), `sessionId` (pseudonymous UUID, also the Kafka key), `page` (pathname only, no query string or fragment, ≤ 200 chars), `productId` (required for clicks, cart adds and cart removals; not allowed on `order_created`), `source` (`playground`/`simulator`/`store`).
 
 Rate limits (MongoDB-backed fixed windows, shared by every instance): 10 wrong tokens / 5 min per client, 20 events/s and 300 events/min overall, the generator at 10 events/s and 100 per run id, 20 control actions / min per client.
+
+## Connecting a storefront
+
+A real shop can feed the same topic, schema, consumers and dashboard. Events from the MERN store use `source: "store"` and the two types that only a real shop produces: `remove_from_cart` and `order_created` (one per saved order; it is order-level, so it never carries a `productId`). Both appear next to the original three types on the Overview (tiles, chart, breakdown), in Live events and in replay totals. Per-product numbers stay clicks and cart additions only: a removal does not reduce a product's cart additions, and orders are not attributed to products.
+
+The store calls `POST /api/events` from its **server** with `Authorization: Bearer <ADMIN_TOKEN>` (so no Kafka credentials leave Pulseboard and nothing secret reaches a browser). The token is the full admin token: it can also pause consumers and start replays, so give it only to a backend you control. Ingestion limits (20 events/s, 300/min overall) apply to the store too; when they are hit the store backs off and retries with the same `eventId`s, and consumers ignore duplicates.
 
 ## Data and retention
 

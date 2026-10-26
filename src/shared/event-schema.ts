@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EVENT_LIMITS, EVENT_SOURCES, EVENT_TYPES, INGEST_LIMITS } from "./constants";
+import { EVENT_LIMITS, EVENT_SOURCES, EVENT_TYPES, INGEST_LIMITS, PRODUCT_EVENT_TYPES } from "./constants";
 
 /**
  * Pathname only: starts with "/", no query string or fragment (those can carry personal data),
@@ -35,11 +35,19 @@ export const eventSchema = z
     source: z.enum(EVENT_SOURCES),
   })
   .superRefine((event, ctx) => {
-    if ((event.type === "product_click" || event.type === "add_to_cart") && !event.productId) {
+    if ((PRODUCT_EVENT_TYPES as readonly string[]).includes(event.type) && !event.productId) {
       ctx.addIssue({
         code: "custom",
         path: ["productId"],
         message: `productId is required for ${event.type} events`,
+      });
+    }
+    // An order is not about one product; a productId here would be counted against that product.
+    if (event.type === "order_created" && event.productId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["productId"],
+        message: "productId is not allowed for order_created events",
       });
     }
   });

@@ -48,6 +48,8 @@ export interface SeriesPoint {
   page_view: number;
   product_click: number;
   add_to_cart: number;
+  remove_from_cart: number;
+  order_created: number;
 }
 
 export interface BreakdownRow {
@@ -72,6 +74,8 @@ export interface Totals {
   pageViews: number;
   productClicks: number;
   cartAdditions: number;
+  cartRemovals: number;
+  orders: number;
   events: number;
 }
 

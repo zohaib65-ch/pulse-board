@@ -35,6 +35,8 @@ const TOTAL_ROWS: { key: keyof Totals; type?: (typeof EVENT_TYPES)[number]; labe
   { key: "pageViews", type: "page_view", label: EVENT_STYLE.page_view.plural },
   { key: "productClicks", type: "product_click", label: EVENT_STYLE.product_click.plural },
   { key: "cartAdditions", type: "add_to_cart", label: EVENT_STYLE.add_to_cart.plural },
+  { key: "cartRemovals", type: "remove_from_cart", label: EVENT_STYLE.remove_from_cart.plural },
+  { key: "orders", type: "order_created", label: EVENT_STYLE.order_created.plural },
   { key: "events", label: "All events" },
 ];
 

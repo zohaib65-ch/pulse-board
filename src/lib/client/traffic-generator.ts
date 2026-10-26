@@ -77,7 +77,10 @@ export interface PlanInput {
   uuid?: () => string;
 }
 
-const TYPE_WEIGHTS: { type: EventType; weight: number }[] = [
+/** The simulator only produces the original three types; orders and removals come from real storefronts. */
+type SimulatedType = "page_view" | "product_click" | "add_to_cart";
+
+const TYPE_WEIGHTS: { type: SimulatedType; weight: number }[] = [
   { type: "page_view", weight: 0.6 },
   { type: "product_click", weight: 0.28 },
   { type: "add_to_cart", weight: 0.12 },
@@ -85,7 +88,7 @@ const TYPE_WEIGHTS: { type: EventType; weight: number }[] = [
 
 const pick = <T>(items: readonly T[], random: () => number): T => items[Math.min(items.length - 1, Math.floor(random() * items.length))]!;
 
-function pickType(random: () => number): EventType {
+function pickType(random: () => number): SimulatedType {
   let roll = random();
   for (const { type, weight } of TYPE_WEIGHTS) {
     if (roll < weight) return type;
@@ -94,7 +97,7 @@ function pickType(random: () => number): EventType {
   return "page_view";
 }
 
-function plannedFor(type: EventType, sessionId: string, random: () => number): PlannedEvent {
+function plannedFor(type: SimulatedType, sessionId: string, random: () => number): PlannedEvent {
   const product = pick(PRODUCTS, random);
   switch (type) {
     case "page_view":
@@ -120,7 +123,7 @@ export function planRun({ mode, count, now, random = Math.random, uuid = newId }
     const sessionId = uuid();
     const windowStart = Math.floor(now / 60_000) * 60_000;
     const spacingMs = 900;
-    const order: EventType[] = ["page_view", "product_click", "page_view", "add_to_cart"];
+    const order: SimulatedType[] = ["page_view", "product_click", "page_view", "add_to_cart"];
     return Array.from({ length: total }, (_, index) => ({
       ...plannedFor(order[index % order.length]!, sessionId, random),
       timestamp: new Date(windowStart + index * spacingMs).toISOString(),

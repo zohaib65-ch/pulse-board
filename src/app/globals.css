@@ -47,6 +47,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -101,6 +103,8 @@
   --chart-3: #6250d6; /* add_to_cart: violet */
   --chart-4: oklch(0.62 0.01 255);
   --chart-5: oklch(0.8 0.006 255);
+  --chart-6: #e87ba4; /* remove_from_cart: magenta */
+  --chart-7: #008300; /* order_created: green */
 
   --sidebar: oklch(0.972 0.003 100);
   --sidebar-foreground: oklch(0.28 0.01 255);
@@ -143,6 +147,8 @@
   --chart-3: #9085e9;
   --chart-4: oklch(0.65 0.01 255);
   --chart-5: oklch(0.4 0.006 255);
+  --chart-6: #d55181;
+  --chart-7: #008300;
 
   --sidebar: oklch(0.185 0.006 255);
   --sidebar-foreground: oklch(0.9 0.004 100);

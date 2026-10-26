@@ -26,16 +26,22 @@ export const REPLAY_GROUP_PREFIX = "pulseboard-replay-v1-" as const;
 export const LIVE_SCOPE = "live" as const;
 
 // ── Event contract ──────────────────────────────────────────────────────────
-export const EVENT_TYPES = ["page_view", "product_click", "add_to_cart"] as const;
+export const EVENT_TYPES = ["page_view", "product_click", "add_to_cart", "remove_from_cart", "order_created"] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
-export const EVENT_SOURCES = ["playground", "simulator"] as const;
+/** Event types that describe one product and therefore require a `productId`. */
+export const PRODUCT_EVENT_TYPES = ["product_click", "add_to_cart", "remove_from_cart"] as const;
+
+/** `store` is a real storefront (see the MERN store integration); the other two are built into Pulseboard. */
+export const EVENT_SOURCES = ["playground", "simulator", "store"] as const;
 export type EventSource = (typeof EVENT_SOURCES)[number];
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   page_view: "Page viewed",
   product_click: "Product clicked",
   add_to_cart: "Added to cart",
+  remove_from_cart: "Removed from cart",
+  order_created: "Order created",
 };
 
 export const EVENT_LIMITS = {

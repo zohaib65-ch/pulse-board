@@ -69,7 +69,9 @@ async function applyEvent(
     { upsert: true, session },
   );
 
-  if (event.productId && event.type !== "page_view") {
+  // Only clicks and cart additions are per-product metrics. Without this guard any other
+  // product-carrying type (remove_from_cart) would be counted as a cart addition.
+  if (event.productId && (event.type === "product_click" || event.type === "add_to_cart")) {
     await c.productBuckets.updateOne(
       { _id: `${scope}|${bucketMs}|${event.productId}` },
       {

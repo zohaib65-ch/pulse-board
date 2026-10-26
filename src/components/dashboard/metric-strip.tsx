@@ -31,6 +31,8 @@ function tiles(data: OverviewData): Tile[] {
     eventTile("page_view", data.totals.pageViews),
     eventTile("product_click", data.totals.productClicks),
     eventTile("add_to_cart", data.totals.cartAdditions),
+    eventTile("remove_from_cart", data.totals.cartRemovals),
+    eventTile("order_created", data.totals.orders),
     {
       key: "sessions",
       label: "Active sessions",
@@ -52,9 +54,9 @@ export function MetricStrip({ data }: { data: OverviewData | null }) {
       <h2 id="key-metrics-heading" className="sr-only">
         Key metrics
       </h2>
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-border ring-1 ring-foreground/10 xl:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-border ring-1 ring-foreground/10 xl:grid-cols-3">
         {data === null
-          ? Array.from({ length: 4 }, (_, index) => (
+          ? Array.from({ length: 6 }, (_, index) => (
               <div key={index} className="space-y-3 bg-card p-4 md:p-5" role="status" aria-label="Loading metric">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-8 w-20" />

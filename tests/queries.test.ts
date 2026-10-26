@@ -32,7 +32,7 @@ afterAll(() => t.drop());
 describe("overview", () => {
   it("applies the range filter consistently to totals, series, breakdown, and top products", async () => {
     const [m15, h1, h24] = await Promise.all(["15m", "1h", "24h"].map((r) => getOverview(t.db, r as "15m")));
-    expect(m15.totals).toEqual({ pageViews: 1, productClicks: 4, cartAdditions: 2, events: 7 });
+    expect(m15.totals).toEqual({ pageViews: 1, productClicks: 4, cartAdditions: 2, cartRemovals: 0, orders: 0, events: 7 });
     expect(h1.totals.pageViews).toBe(2);
     expect(h24.totals.productClicks).toBe(5);
 
@@ -55,7 +55,7 @@ describe("overview", () => {
   it("returns honest zeros and null shares for an empty range", async () => {
     const empty = await createTestDb();
     const overview = await getOverview(empty.db, "1h");
-    expect(overview.totals).toEqual({ pageViews: 0, productClicks: 0, cartAdditions: 0, events: 0 });
+    expect(overview.totals).toEqual({ pageViews: 0, productClicks: 0, cartAdditions: 0, cartRemovals: 0, orders: 0, events: 0 });
     expect(overview.breakdown.every((row) => row.share === null)).toBe(true);
     expect(overview.topProducts).toEqual([]);
     await empty.drop();

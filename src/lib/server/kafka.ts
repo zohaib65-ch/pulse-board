@@ -8,6 +8,7 @@ import { log } from "./log";
 /**
  * Creates a KafkaJS client using Aiven's mutual TLS: the CA certificate verifies the broker,
  * and the client certificate + key authenticate us. Certificate verification stays enabled.
+ * Only a localhost broker with KAFKA_SSL=false (local development) connects without TLS.
  */
 export function createKafka(
   clientId: string,
@@ -17,12 +18,7 @@ export function createKafka(
   return new Kafka({
     clientId,
     brokers: config.brokers,
-    ssl: {
-      ca: [config.ca],
-      cert: config.cert,
-      key: config.key,
-      rejectUnauthorized: true,
-    },
+    ssl: config.tls ? { ca: [config.ca], cert: config.cert, key: config.key, rejectUnauthorized: true } : false,
     connectionTimeout: options.connectionTimeout ?? 8000,
     requestTimeout: options.requestTimeout ?? 15_000,
     retry: { initialRetryTime: 300, maxRetryTime: 15_000, retries: options.retries ?? 5 },

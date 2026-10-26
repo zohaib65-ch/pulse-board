@@ -6,6 +6,7 @@ import {
   LIVE_SCOPE,
   METRIC_BUCKET_MS,
   QUERY_LIMITS,
+  type EventType,
 } from "@/shared/constants";
 import type { BreakdownRow, ProductRow, SeriesPoint, Totals } from "@/shared/api";
 import { floorTo } from "@/shared/time";
@@ -32,6 +33,9 @@ export function share(part: number, whole: number): number | null {
   return whole > 0 ? part / whole : null;
 }
 
+const zeroCounts = (): Record<EventType, number> =>
+  Object.fromEntries(EVENT_TYPES.map((type) => [type, 0])) as Record<EventType, number>;
+
 export async function readWindowStats(db: Db, window: StatsWindow): Promise<WindowStats> {
   const { scope, fromMs, toMs, chartBucketMs } = window;
   const docs = await collections(db)
@@ -44,10 +48,10 @@ export async function readWindowStats(db: Db, window: StatsWindow): Promise<Wind
   const last = floorTo(toMs, chartBucketMs);
   const points = new Map<number, SeriesPoint>();
   for (let t = first, n = 0; t <= last && n < MAX_CHART_POINTS; t += chartBucketMs, n++) {
-    points.set(t, { t: new Date(t).toISOString(), page_view: 0, product_click: 0, add_to_cart: 0 });
+    points.set(t, { t: new Date(t).toISOString(), ...zeroCounts() });
   }
 
-  const counts = { page_view: 0, product_click: 0, add_to_cart: 0 };
+  const counts = zeroCounts();
   for (const doc of docs) {
     const point = points.get(floorTo(doc.bucket.getTime(), chartBucketMs));
     for (const type of EVENT_TYPES) {
@@ -57,12 +61,14 @@ export async function readWindowStats(db: Db, window: StatsWindow): Promise<Wind
     }
   }
 
-  const events = counts.page_view + counts.product_click + counts.add_to_cart;
+  const events = EVENT_TYPES.reduce((sum, type) => sum + counts[type], 0);
   return {
     totals: {
       pageViews: counts.page_view,
       productClicks: counts.product_click,
       cartAdditions: counts.add_to_cart,
+      cartRemovals: counts.remove_from_cart,
+      orders: counts.order_created,
       events,
     },
     series: [...points.values()],

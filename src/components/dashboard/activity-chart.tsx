@@ -17,9 +17,17 @@ const chartConfig = {
   page_view: { label: EVENT_STYLE.page_view.plural, color: EVENT_STYLE.page_view.color },
   product_click: { label: EVENT_STYLE.product_click.plural, color: EVENT_STYLE.product_click.color },
   add_to_cart: { label: EVENT_STYLE.add_to_cart.plural, color: EVENT_STYLE.add_to_cart.color },
+  remove_from_cart: { label: EVENT_STYLE.remove_from_cart.plural, color: EVENT_STYLE.remove_from_cart.color },
+  order_created: { label: EVENT_STYLE.order_created.plural, color: EVENT_STYLE.order_created.color },
 } satisfies ChartConfig;
 
-const TOTAL_KEYS = { page_view: "pageViews", product_click: "productClicks", add_to_cart: "cartAdditions" } as const;
+const TOTAL_KEYS = {
+  page_view: "pageViews",
+  product_click: "productClicks",
+  add_to_cart: "cartAdditions",
+  remove_from_cart: "cartRemovals",
+  order_created: "orders",
+} as const;
 
 function Legend({ data }: { data: OverviewData }) {
   return (
