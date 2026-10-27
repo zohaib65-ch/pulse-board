@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/dev-all.mjs",
+    "dev": "node scripts/dev.mjs",
     "dev:web": "next dev",
     "dev:worker": "tsx watch --disable-warning=TimeoutNegativeWarning --env-file-if-exists=.env --env-file-if-exists=.env.local workers/index.ts",
     "build": "next build",

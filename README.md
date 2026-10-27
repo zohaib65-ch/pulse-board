@@ -30,17 +30,17 @@ Requirements: Node.js 24+, an Aiven Kafka service, and a MongoDB Atlas cluster (
 ```bash
 npm install
 cp .env.example .env.local        # fill in the six values
-npm run dev                       # the web app (http://localhost:3000) AND the Kafka worker, together
-npm run dev:worker                # optional, in a second terminal: a SECOND worker (watch partitions rebalance)
+npm run dev                       # web app on http://localhost:3000 AND the Kafka worker, together
+npm run dev:worker                # optional second terminal: a SECOND worker (watch partitions rebalance)
 ```
 
 Open the app, go to **Settings** (or click “Admin locked”), enter your `ADMIN_TOKEN`, then use the **Kafka Lab**.
 
 | Script | What it does |
 | --- | --- |
-| `npm run dev` | Web app **and** worker together in one terminal (output labelled `[web]` / `[worker]`; Ctrl+C stops both). They remain two separate processes. |
-| `npm run dev:web` | Next.js dev server only |
-| `npm run dev:worker` | Worker only, with file watching (`tsx`); loads `.env` then `.env.local` |
+| `npm run dev` | Web app (Next.js dev server) and the Kafka worker together, with labelled logs; Ctrl+C stops both |
+| `npm run dev:web` | Only the Next.js dev server |
+| `npm run dev:worker` | Worker with file watching (`tsx`); loads `.env` then `.env.local` |
 | `npm run build` | Production build of the web app (needs no credentials) |
 | `npm run build:worker` | Bundles the worker and its shared code into `dist/worker.cjs` |
 | `npm run start` / `npm run start:worker` | Run the built web app / the built worker |
@@ -117,7 +117,7 @@ export MONGODB_URI='mongodb://localhost:27018/pulseboard_local?directConnection=
 export KAFKA_BROKERS='localhost:9094'
 export KAFKA_SSL='false'                 # plaintext, accepted ONLY when every broker is localhost / 127.0.0.1
 export ADMIN_TOKEN="$(openssl rand -base64 32)"
-npm run dev -- -p 3001 & npm run dev:worker
+npm run dev:web -- -p 3001 & npm run dev:worker
 ```
 
 `KAFKA_SSL=false` is deliberately not in `.env.example`: only the exact value `false` disables TLS, and any broker that is not on this machine is refused at startup, so it cannot weaken a real deployment by accident.
