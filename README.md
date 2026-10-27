@@ -30,17 +30,17 @@ Requirements: Node.js 24+, an Aiven Kafka service, and a MongoDB Atlas cluster (
 ```bash
 npm install
 cp .env.example .env.local        # fill in the six values
-npm run dev                       # web app on http://localhost:3000
-npm run dev:worker                # in a second terminal: the Kafka worker
-npm run dev:worker                # optional third terminal: a SECOND worker (watch partitions rebalance)
+npm run dev                       # the web app (http://localhost:3000) AND the Kafka worker, together
+npm run dev:worker                # optional, in a second terminal: a SECOND worker (watch partitions rebalance)
 ```
 
 Open the app, go to **Settings** (or click “Admin locked”), enter your `ADMIN_TOKEN`, then use the **Kafka Lab**.
 
 | Script | What it does |
 | --- | --- |
-| `npm run dev` | Next.js dev server |
-| `npm run dev:worker` | Worker with file watching (`tsx`); loads `.env` then `.env.local` |
+| `npm run dev` | Web app **and** worker together in one terminal (output labelled `[web]` / `[worker]`; Ctrl+C stops both). They remain two separate processes. |
+| `npm run dev:web` | Next.js dev server only |
+| `npm run dev:worker` | Worker only, with file watching (`tsx`); loads `.env` then `.env.local` |
 | `npm run build` | Production build of the web app (needs no credentials) |
 | `npm run build:worker` | Bundles the worker and its shared code into `dist/worker.cjs` |
 | `npm run start` / `npm run start:worker` | Run the built web app / the built worker |
@@ -125,8 +125,8 @@ npm run dev -- -p 3001 & npm run dev:worker
 ## Running locally
 
 ```bash
-npm run dev            # terminal 1
-npm run dev:worker     # terminal 2
+npm run dev            # web app + worker together
+# or in two terminals:  npm run dev:web   and   npm run dev:worker
 ```
 
 * The worker loads `.env` and then `.env.local` (later wins, like Next.js) through Node’s `--env-file-if-exists`.
